@@ -1,0 +1,6 @@
+# config.yaml
+genome: inputs/genome.fa
+samples: ['A','B','C']
+outputDirectory: output
+readDirectory: inputs/reads
+minimapParameters: -x sr

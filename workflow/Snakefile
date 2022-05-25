@@ -1,0 +1,41 @@
+# Snakefile
+configfile: "config/config.yaml"
+
+temp_dir = 'temp'
+out_dir = config['outputDirectory']
+read_dir = config['readDirectory']
+
+rule all:
+    input:
+        expand(out_dir + "/{sample}.{file}", sample=config['samples'], file=['bam','reads.tsv'])
+
+rule count_reads:
+    input:
+        read_dir + "/{sample}.fastq"
+    output:
+        out_dir + "/{sample}.reads.tsv"
+    script:
+        "scripts/count_reads.py"
+
+rule map_reads:
+    input:
+        genome = config['genome'],
+        reads = read_dir + "/{sample}.fastq"
+    output:
+        temp(temp_dir + "/{sample}.sam")
+    threads:
+        8
+    params:
+        config['minimapParameters']
+    conda:
+        'envs/minimap2.yaml'
+    shell:
+        "minimap2 -t {threads} -a {params} {input.genome} {input.reads} > {output}"
+
+rule convert_sam:
+    input:
+        temp_dir + "/{file}.sam"
+    output:
+        out_dir + "/{file}.bam"
+    shell:
+        "samtools view -bh {input} > {output}"
